@@ -13,13 +13,6 @@
 
 - (UIImage *)imageTintedWithColor:(UIColor *)color
 {
-	// This method is designed for use with template images, i.e. solid-coloured mask-like images.
-	return [self imageTintedWithColor:color fraction:0.0]; // default to a fully tinted mask of the image.
-}
-
-
-- (UIImage *)imageTintedWithColor:(UIColor *)color fraction:(CGFloat)fraction
-{
 	if (color) {
 		// Construct new image the same size as this one.
 		UIImage *image;
@@ -27,19 +20,14 @@
 		CGRect rect = CGRectZero;
 		rect.size = [self size];
 		
-		// Composite tint color at its own opacity.
+		// tint the image
+		[self drawInRect:rect];
 		[color set];
-		UIRectFill(rect);
+		UIRectFillUsingBlendMode(rect, kCGBlendModeColor);
 		
-		// Mask tint color-swatch to this image's opaque mask.
-		// We want behaviour like NSCompositeDestinationIn on Mac OS X.
-		[self drawInRect:rect blendMode:kCGBlendModeDestinationIn alpha:1.0];
+		// restore alpha channel
+		[self drawInRect:rect blendMode:kCGBlendModeDestinationIn alpha:1.0f];
 		
-		// Finally, composite this image over the tinted mask at desired opacity.
-		if (fraction > 0.0) {
-			// We want behaviour like NSCompositeSourceOver on Mac OS X.
-			[self drawInRect:rect blendMode:kCGBlendModeSourceAtop alpha:fraction];
-		}
 		image = UIGraphicsGetImageFromCurrentImageContext();
 		UIGraphicsEndImageContext();
 		
@@ -47,6 +35,7 @@
 	}
 	
 	return self;
+	
 }
 
 
