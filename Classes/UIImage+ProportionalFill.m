@@ -13,8 +13,13 @@
 
 - (UIImage *)imageToFitSize:(CGSize)fitSize method:(MGImageResizingMethod)resizeMethod
 {
-    float sourceWidth = [self size].width * self.scale;
-    float sourceHeight = [self size].height * self.scale;
+#if __IPHONE_OS_VERSION_MAX_ALLOWED <= __IPHONE_3_2
+    float scale = 1.0;
+#else
+    float scale = self.scale;
+#endif
+    float sourceWidth = [self size].width * scale;
+    float sourceHeight = [self size].height * scale;
     float targetWidth = fitSize.width;
     float targetHeight = fitSize.height;
     BOOL cropping = !(resizeMethod == MGImageResizeScale);
@@ -82,9 +87,15 @@
     
     // Create appropriately modified image.
 	UIImage *image;
+#if __IPHONE_OS_VERSION_MAX_ALLOWED <= __IPHONE_3_2
+	UIGraphicsBeginImageContext(destRect.size);
+	CGImageRef sourceImg = CGImageCreateWithImageInRect([self CGImage], sourceRect); // cropping happens here.
+	image = [UIImage imageWithCGImage:sourceImg]; // create cropped UIImage.
+#else
 	UIGraphicsBeginImageContextWithOptions(destRect.size, NO, 0.0); // 0.0 for scale means "correct scale for device's main screen".
 	CGImageRef sourceImg = CGImageCreateWithImageInRect([self CGImage], sourceRect); // cropping happens here.
 	image = [UIImage imageWithCGImage:sourceImg scale:0.0 orientation:self.imageOrientation]; // create cropped UIImage.
+#endif
 	[image drawInRect:destRect]; // the actual scaling happens here, and orientation is taken care of automatically.
 	CGImageRelease(sourceImg);
 	image = UIGraphicsGetImageFromCurrentImageContext();
